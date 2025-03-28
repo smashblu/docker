@@ -1,0 +1,31 @@
+version: '3'
+
+services:
+  traefik:
+    image: traefik:v3.3.4
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./config/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/acme.json:/acme.json
+    labels:
+      - "traefik.enable=true"
+    environment:
+      - DUCKDNS_TOKEN=your_duckdns_token
+    networks:
+      - frontend
+networks:
+  frontend:
+    external: true
+  your-app:
+    image: your-app-image
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app.rule=Host(`your-subdomain.duckdns.org`)"
+      - "traefik.http.routers.app.entrypoints=websecure"
+      - "traefik.http.routers.app.tls.certresolver=letsencrypt"
